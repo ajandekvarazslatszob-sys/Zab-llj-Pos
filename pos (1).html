@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POS Rendszer</title>
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:#111;
+color:#fff;
+min-height:100vh;
+}
+
+.header{
+background:#1a1a1a;
+border-bottom:3px solid #ff7b00;
+padding:15px 25px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 4px 15px rgba(0,0,0,.5);
+}
+
+.title{
+font-size:24px;
+font-weight:bold;
+color:#ff7b00;
+letter-spacing:1px;
+}
+
+.tabs{
+display:flex;
+gap:10px;
+}
+
+.tab{
+background:#222;
+padding:12px 18px;
+border-radius:10px;
+cursor:pointer;
+font-size:18px;
+transition:.25s;
+border:1px solid #333;
+}
+
+.tab:hover{
+background:#ff7b00;
+color:#fff;
+transform:translateY(-2px);
+}
+
+.active{
+background:#ff7b00;
+color:#fff;
+font-weight:bold;
+}
+
+.page{
+display:none;
+padding:25px;
+}
+
+.show{
+display:block;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+gap:15px;
+}
+
+.card{
+background:#1d1d1d;
+border:1px solid #333;
+border-left:4px solid #ff7b00;
+border-radius:12px;
+padding:15px;
+transition:.2s;
+box-shadow:0 3px 10px rgba(0,0,0,.3);
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:0 6px 20px rgba(255,123,0,.2);
+}
+
+button{
+background:#ff7b00;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+transition:.2s;
+}
+
+button:hover{
+background:#ff9326;
+}
+
+input,select,textarea{
+width:100%;
+padding:12px;
+margin-top:8px;
+margin-bottom:12px;
+background:#181818;
+border:1px solid #444;
+border-radius:8px;
+color:white;
+font-size:14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+outline:none;
+border-color:#ff7b00;
+box-shadow:0 0 10px rgba(255,123,0,.3);
+}
+
+.cart{
+background:#1b1b1b;
+border:1px solid #333;
+border-radius:12px;
+padding:15px;
+margin-top:10px;
+}
+
+.cart hr{
+border:none;
+height:1px;
+background:#444;
+margin:10px 0;
+}
+
+h2,h3{
+color:#ff7b00;
+margin-bottom:15px;
+}
+
+#productList .card{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+::-webkit-scrollbar{
+width:8px;
+}
+
+::-webkit-scrollbar-track{
+background:#111;
+}
+
+::-webkit-scrollbar-thumb{
+background:#ff7b00;
+border-radius:20px;
+}
+
+.payment-modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.85);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.payment-box{
+background:#1d1d1d;
+padding:30px;
+border-radius:15px;
+width:450px;
+text-align:center;
+border:2px solid #ff7b00;
+box-shadow:0 0 30px rgba(255,123,0,.3);
+}
+
+.payment-box h2{
+margin-bottom:10px;
+color:#ff7b00;
+}
+
+.pay-btn{
+width:100%;
+padding:18px;
+margin-top:15px;
+font-size:20px;
+font-weight:bold;
+border:none;
+border-radius:10px;
+cursor:pointer;
+transition:.2s;
+}
+
+.pay-btn:hover{
+transform:scale(1.03);
+}
+
+.cash{
+background:#27ae60;
+color:white;
+}
+
+.card{
+background:#2980b9;
+color:white;
+}
+
+.szep{
+background:#ff7b00;
+color:white;
+}
+
+.success-modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.9);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:10000;
+}
+
+.success-box{
+width:600px;
+max-width:90%;
+background:#1b1b1b;
+border:3px solid #ff7b00;
+border-radius:20px;
+padding:40px;
+text-align:center;
+}
+
+.success-icon{
+font-size:80px;
+margin-bottom:20px;
+}
+
+.success-box h1{
+font-size:42px;
+color:#ff7b00;
+margin-bottom:20px;
+}
+
+.success-box h2{
+font-size:32px;
+color:white;
+margin-bottom:30px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('cashier',this)">🧾 Kassza</div>
+<div id="adminTab" class="tab" onclick="openAdmin()">⚙️</div>
+</div>
+
+<div id="cashier" class="page show">
+<div style="
+background:#1a1a1a;
+border:1px solid #333;
+border-left:5px solid #ff7b00;
+padding:15px;
+margin-bottom:20px;
+border-radius:10px;
+font-size:20px;
+font-weight:bold;">
+🛒 Aktuális rendelés
+</div>
+<h2>Kassza</h2>
+<div id="categories"></div>
+<div id="products" class="grid"></div>
+
+<h3>Kosár</h3>
+<div id="cart" class="cart">Üres</div>
+
+<textarea id="note" placeholder="Megjegyzés"></textarea>
+<input
+    id="nickname"
+    placeholder="Becenév / Név (pl. Pisti, Anna, Kék Pulcsi)"
+    maxlength="30">
+<button onclick="saveOrder()">📄 Rendelés véglegesítése</button>
+</div>
+
+<div id="admin" class="page">
+
+<h2>Termékkezelő</h2>
+
+<input id="name" placeholder="Termék neve">
+<input id="price" type="number" placeholder="Ár">
+<select id="category">
+<option>Lángosok</option>
+<option>Tortillák</option>
+<option>Hamburgerek</option>
+<option>Italok</option>
+<option>Feltétek</option>
+</select>
+
+<button onclick="addProduct()">➕ Termék hozzáadása</button>
+
+<h3>Terméklista</h3>
+<div id="productList"></div>
+</div>
+
+<script>
+
+function showSuccess(orderId){
+
+    const nickname =
+        document.getElementById("nickname").value.trim();
+
+    document.getElementById("successModal").style.display = "flex";
+
+    // ha akarsz rendelés számot kiírni:
+    // document.getElementById("successText").innerText =
+    // `Köszönjük ${nickname}! Rendelés: #${orderId}`;
+}
+
+
+function saveOrder(){
+
+    if(!cart.length){
+        alert("Üres kosár");
+        return;
+    }
+
+    const nickname =
+        document.getElementById("nickname").value.trim();
+
+    if(!nickname){
+        alert("Kérjük adjon meg egy becenevet!");
+        return;
+    }
+
+    document.getElementById("paymentModal").style.display="flex";
+}
+function selectPayment(method){
+
+    selectedPayment = method;
+
+    document.getElementById("paymentModal").style.display="none";
+
+    finishOrder();
+}
+
+let selectedPayment = "";
+let cart=[];
+let currentCategory='Összes';
+
+if(!localStorage.products){
+localStorage.products=JSON.stringify([
+{name:'Hamburger',price:2000,category:'Főételek'},
+{name:'Pizza',price:3500,category:'Főételek'},
+{name:'Kóla',price:600,category:'Italok'}
+]);
+}
+
+let orderCounter=Number(localStorage.orderCounter||1000);
+
+function products(){ return JSON.parse(localStorage.products); }
+
+function showTab(id,el){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('show'));
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+document.getElementById(id).classList.add('show');
+el.classList.add('active');
+}
+
+function renderCategories(){
+const cats=['Összes',...new Set(products().map(p=>p.category))];
+document.getElementById('categories').innerHTML=cats.map(c=>
+`<button onclick="currentCategory='${c}';renderProducts()">${c}</button>`
+).join(' ');
+}
+
+function renderProducts(){
+let p=products();
+if(currentCategory!=='Összes')
+p=p.filter(x=>x.category===currentCategory);
+
+document.getElementById('products').innerHTML=p.map(x=>`
+<div class="card">
+<b>${x.name}</b><br>
+${x.price} Ft<br><br>
+<button onclick="addToCart('${x.name}',${x.price})">➕ Kosárba</button>
+</div>`).join('');
+}
+
+function addToCart(name,price){
+let item=cart.find(x=>x.name===name);
+if(item)item.qty++;
+else cart.push({name,price,qty:1});
+renderCart();
+}
+
+function renderCart(){
+if(!cart.length){
+document.getElementById('cart').innerHTML='Üres';
+return;
+}
+let total=0;
+document.getElementById('cart').innerHTML=cart.map((i,n)=>{
+total+=i.price*i.qty;
+return `${i.name} (${i.qty} db) - ${i.price*i.qty} Ft
+<button onclick="cart[${n}].qty++;renderCart()">+</button>
+<button onclick="dec(${n})">-</button><br>`;
+}).join('')+`<hr><b>Összesen: ${total} Ft</b>`;
+}
+
+function dec(i){
+cart[i].qty--;
+if(cart[i].qty<=0)cart.splice(i,1);
+renderCart();
+}
+
+function addProduct(){
+let p=products();
+p.push({
+name: document.getElementById('name').value,
+price: Number(document.getElementById('price').value),
+category: document.getElementById('category').value
+});
+localStorage.products=JSON.stringify(p);
+name.value=''; price.value='';
+renderProducts(); renderProductList(); renderCategories();
+}
+
+function deleteProduct(i){
+let p=products();
+p.splice(i,1);
+localStorage.products=JSON.stringify(p);
+renderProducts(); renderProductList(); renderCategories();
+}
+
+function renderProductList(){
+document.getElementById('productList').innerHTML=products().map((p,i)=>
+`<div class="card">${p.name} - ${p.price} Ft (${p.category})
+<button onclick="deleteProduct(${i})">❌</button></div>`).join('');
+}
+
+function finishOrder(){
+if(!cart.length){alert('Üres kosár');return;}
+const id=orderCounter++;
+localStorage.orderCounter=orderCounter;
+
+
+let total=0;
+const nickname =
+    document.getElementById("nickname").value.trim();
+
+let txt=`RENDELÉS
+
+Név: ${nickname}
+Időpont: ${new Date().toLocaleString()}
+
+`;
+
+cart.forEach(i=>{
+txt+=`${i.name} - ${i.qty} db - ${i.price*i.qty} Ft\n`;
+total+=i.price*i.qty;
+});
+
+txt+=`\nMegjegyzés: ${note.value||'-'}\n`;
+txt+=`Végösszeg: ${total} Ft\n`;
+txt+=`Fizetési mód: ${selectedPayment}\n`;
+
+const blob=new Blob([txt],{type:'text/plain'});
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download=`rendeles_${id}.txt`;
+a.click();
+
+cart=[];
+note.value='';
+renderCart();
+
+showSuccess(id);
+}
+function openAdmin(){
+
+    const code = prompt("Admin kód:");
+
+    if(code !== "1989csa"){
+        alert("Hibás kód!");
+        return;
+    }
+
+    document.querySelectorAll('.page')
+        .forEach(x => x.classList.remove('show'));
+
+    document.querySelectorAll('.tab')
+        .forEach(x => x.classList.remove('active'));
+
+    document.getElementById('admin').classList.add('show');
+    document.getElementById('adminTab').classList.add('active');
+}
+renderCategories();
+renderProducts();
+renderProductList();
+renderCart();
+
+
+function closeSuccess(){
+
+    document.getElementById("successModal").style.display = "none";
+
+    // Új rendelés előkészítése
+    cart = [];
+    renderCart();
+
+    document.getElementById("note").value = "";
+    document.getElementById("nickname").value = "";
+
+    // Vissza a kasszához
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("show"));
+    document.getElementById("cashier").classList.add("show");
+
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelector(".tab").classList.add("active");
+}
+
+
+</script>
+<div id="paymentModal" class="payment-modal">
+
+    <div class="payment-box">
+
+        <h2>💳 Fizetési mód</h2>
+        <p>Kérjük válassza ki a fizetési módot</p>
+
+        <button class="pay-btn cash"
+            onclick="selectPayment('Készpénz')">
+            💵 Készpénz
+        </button>
+
+        <button class="pay-btn card"
+            onclick="selectPayment('Bankkártya')">
+            💳 Bankkártya
+        </button>
+
+        <button class="pay-btn szep"
+            onclick="selectPayment('SZÉP Kártya')">
+            🏨 SZÉP Kártya
+        </button>
+
+    </div>
+
+</div>
+<div id="successModal" class="success-modal">
+
+    <div class="success-box">
+
+        <div class="success-icon">✅</div>
+
+        <h1>RENDELÉS BEKÜLDVE</h1>
+
+        
+	
+        <button onclick="closeSuccess()">
+            Rendben
+        </button>
+
+    </div>
+
+</div>
+</body>
+</html>
